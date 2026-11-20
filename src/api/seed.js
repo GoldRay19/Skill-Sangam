@@ -1,0 +1,156 @@
+import { read, write } from "./store";
+
+const seed = {
+  users: [
+    {
+      id: "admin-1",
+      role: "admin",
+      name: "Platform Admin",
+      email: "admin@skillsangam.dev",
+      password: "admin123",
+    },
+    {
+      id: "student-1",
+      role: "student",
+      name: "Aarav Sharma",
+      email: "student@skillsangam.dev",
+      password: "student123",
+      college: "B.Tech Graduate",
+      bio: "Frontend developer looking for practical work.",
+      skills: ["React", "JavaScript"],
+      github: "",
+    },
+    {
+      id: "employer-1",
+      role: "employer",
+      name: "GreenLoop Team",
+      email: "team@greenloop.dev",
+      password: "employer123",
+      companyName: "GreenLoop",
+      website: "https://greenloop.dev",
+      linkedin: "https://linkedin.com/company/greenloop",
+      verificationStatus: "approved",
+      registrationType: "CIN",
+      registrationNumber: "U12345DL2020PTC123456",
+      proof: "",
+    },
+    {
+      id: "employer-2",
+      role: "employer",
+      name: "DataNest Team",
+      email: "hello@datanest.ai",
+      password: "employer123",
+      companyName: "DataNest AI",
+      website: "https://datanest.ai",
+      linkedin: "https://linkedin.com/company/datanest-ai",
+      verificationStatus: "approved",
+      registrationType: "GSTIN",
+      registrationNumber: "22AAAAA0000A1Z5",
+      proof: "",
+    },
+    {
+      id: "employer-3",
+      role: "employer",
+      name: "OrbitDesk Team",
+      email: "founder@orbitdesk.io",
+      password: "employer123",
+      companyName: "OrbitDesk",
+      website: "https://orbitdesk.io",
+      linkedin: "https://linkedin.com/company/orbitdesk",
+      verificationStatus: "pending",
+      registrationType: "Udyam",
+      registrationNumber: "UDYAM-DL-00-0001234",
+      proof: "",
+    },
+  ],
+  internships: [
+    {
+      id: "i1",
+      employerId: "employer-1",
+      title: "Build a climate-tech landing page",
+      description:
+        "Create a polished, mobile-first landing page that communicates our mission and converts visitors into early-access signups.",
+      deliverables:
+        "Responsive landing page, reusable React components, README",
+      stipend: 4500,
+      startDate: "2026-12-01",
+      openings: 2,
+      requiredSkills: ["React", "JavaScript", "CSS"],
+      status: "open",
+    },
+    {
+      id: "i2",
+      employerId: "employer-2",
+      title: "Create a data cleaning pipeline",
+      description:
+        "Turn messy customer datasets into clean, analysis-ready tables and a short insights report.",
+      deliverables: "Cleaning scripts, analysis notebook, insights summary",
+      stipend: 6000,
+      startDate: "2026-12-05",
+      openings: 1,
+      requiredSkills: ["Python", "Pandas", "Data Visualization"],
+      status: "open",
+    },
+    {
+      id: "i3",
+      employerId: "employer-1",
+      title: "Improve onboarding UI",
+      description:
+        "Design and implement a clear onboarding flow for a sustainability app.",
+      deliverables: "User flow, high-fidelity screens, implementation notes",
+      stipend: 3500,
+      startDate: "2026-12-10",
+      openings: 2,
+      requiredSkills: ["React", "Figma", "UI Design"],
+      status: "open",
+    },
+    {
+      id: "i4",
+      employerId: "employer-2",
+      title: "Document REST API endpoints",
+      description:
+        "Implement and document API modules for a student community platform.",
+      deliverables: "Endpoints, Postman collection, API documentation",
+      stipend: 7000,
+      startDate: "2026-12-12",
+      openings: 1,
+      requiredSkills: ["Node.js", "Express", "MongoDB"],
+      status: "open",
+    },
+    {
+      id: "i5",
+      employerId: "employer-3",
+      title: "Research competitor positioning",
+      description: "Map the competitor landscape for a new learning product.",
+      deliverables: "Comparison matrix, opportunity summary, presentation",
+      stipend: 2500,
+      startDate: "2026-12-15",
+      openings: 3,
+      requiredSkills: ["Research", "Communication", "Excel"],
+      status: "open",
+    },
+    {
+      id: "i6",
+      employerId: "employer-1",
+      title: "Integrate an AI support assistant",
+      description:
+        "Prototype a support assistant that answers questions from a small knowledge base.",
+      deliverables:
+        "Assistant prototype, evaluation examples, deployment notes",
+      stipend: 8500,
+      startDate: "2026-12-20",
+      openings: 1,
+      requiredSkills: ["Python", "LLM APIs", "FastAPI"],
+      status: "open",
+    },
+  ],
+  applications: [],
+  reports: [],
+  audit: [],
+};
+
+export function ensureSeed() {
+  Object.entries(seed).forEach(([key, value]) => {
+    if (localStorage.getItem(`ss_phase1_${key}`) === null) write(key, value);
+  });
+}

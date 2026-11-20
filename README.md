@@ -1,372 +1,141 @@
-# 🎓 SkillSangam — Turn Skills into Real-World Experience
+# SkillSangam
 
-<p align="center">
-  <strong>Bridging the gap between student talent and startup opportunities through short, structured, skill-based micro-internships.</strong>
-</p>
+SkillSangam is a React/Vite marketplace prototype connecting fresh software graduates with startups through paid, focused two-week micro-internships.
 
-<p align="center">
-  <img src="https://img.shields.io/badge/React-18.3.1-61DAFB?logo=react&logoColor=black" alt="React" />
-  <img src="https://img.shields.io/badge/Vite-6.0.5-646CFF?logo=vite&logoColor=white" alt="Vite" />
-  <img src="https://img.shields.io/badge/JavaScript-ES6+-F7DF1E?logo=javascript&logoColor=black" alt="JavaScript" />
-  <img src="https://img.shields.io/badge/Status-Frontend%20Prototype-orange" alt="Project Status" />
-  <img src="https://img.shields.io/badge/Responsive-Yes-brightgreen" alt="Responsive" />
-</p>
+## Current product
 
----
+The application has three separate role experiences:
 
-## 📌 Overview
+- Student: discover internships, calculate skill-match scores, apply, manage applications, and maintain a profile.
+- Employer: complete verification, manage company details, create and edit internships, and review applicants.
+- Admin: review employers, manage reports, inspect platform counts, and review the audit log.
 
-**SkillSangam** is a skill-based micro-internship platform designed to connect students and emerging developers with startups that need practical, project-oriented support.
+All three roles have separate layouts, navigation links, role badges, dashboards, and accent colours.
 
-Traditional internships can require long commitments, extensive experience, and lengthy recruitment processes. At the same time, students often struggle to find opportunities where they can demonstrate their abilities through real work.
+## Routes
 
-SkillSangam addresses this gap by introducing short-duration, clearly defined micro-internships with specific deliverables, milestones, compensation information, and transparent progress tracking.
+### Public
 
-The platform brings students, startups, and administrators together in one structured ecosystem.
+| Route | Purpose |
+| --- | --- |
+| `/` | Landing page |
+| `/how-it-works` | Student/startup workflow tabs |
+| `/internships` | Read-only public internship browser |
+| `/login` | Sign in |
+| `/register` | Student/employer registration |
+| `/verify-email` | Employer OTP and verification flow |
+| `/account` | Account settings for authenticated users |
+| `/about` | About page |
+| `/terms` | Terms page |
+| `/privacy` | Privacy page |
+| `/unauthorized` | Role access error page |
 
-### 🎯 Our Vision
+### Student
 
-To make practical experience more accessible by allowing students to demonstrate their skills, work on meaningful projects, receive feedback, and build credible portfolios while helping startups discover emerging talent.
+| Route | Purpose |
+| --- | --- |
+| `/student` | Student dashboard |
+| `/student/browse` | Search, filter, sort, and match internships |
+| `/student/internships/:id` | Internship detail, apply, and report employer |
+| `/student/applications` | Application status list |
+| `/student/profile` | Profile, skills, consent, and GitHub skill detection |
 
----
+### Employer
 
-## 🚀 Key Features
+| Route | Purpose |
+| --- | --- |
+| `/employer` | Employer dashboard |
+| `/employer/verify` | Email OTP and company verification wizard |
+| `/employer/internships` | Manage internship listings |
+| `/employer/internships/new` | Create an internship |
+| `/employer/internships/:id/edit` | Edit an internship with no applicants |
+| `/employer/internships/:id/applicants` | Shortlist, accept, or reject applicants |
+| `/employer/company` | View and edit company profile |
 
-### 👨‍🎓 1. Student Workspace
+### Admin
 
-A dedicated workspace that helps students discover opportunities and manage their professional growth.
+| Route | Purpose |
+| --- | --- |
+| `/admin` | Admin dashboard with computed counts |
+| `/admin/employers` | Employer approval, suspension, and reinstatement |
+| `/admin/reports` | Report status tabs and moderation actions |
+| `/admin/audit` | Recorded administrative actions |
 
-- **Opportunity Discovery:** Browse available micro-internships and explore different domains.
-- **Advanced Filtering:** Search and filter opportunities based on skills, compensation, and other criteria.
-- **Opportunity Details:** Review task descriptions, expected deliverables, and milestone plans.
-- **Bookmarking:** Save interesting opportunities for later.
-- **Application Tracking:** Apply for opportunities and monitor application status.
-- **Student Profile:** Maintain a professional profile with relevant information and skills.
-- **Skills Lab:** Attempt skill-based quizzes, receive scores, and review explanations.
-- **Project Workroom:** Access the project workspace and milestone submission interface.
-- **Messaging Interface:** Explore communication workflows between students and startups.
-- **Trust Centre:** Access trust-related information and platform safeguards.
-
-### 🏢 2. Startup Workspace
-
-A workspace designed to help startups publish tasks and discover suitable student talent.
-
-- **Create Opportunities:** Publish structured micro-internship listings.
-- **Define Deliverables:** Specify expected outcomes and project requirements.
-- **Set Compensation:** Display compensation details transparently.
-- **Skill Requirements:** Identify the technical and professional skills required.
-- **Candidate Discovery:** Explore sample candidate recommendations.
-- **Shortlisting Interface:** Review and shortlist potential candidates.
-- **Application Management:** View and manage incoming applications.
-- **Workroom Management:** Track project workspaces and milestones.
-- **Communication:** Access the messaging interface.
-
-### 🛡️ 3. Administrator Workspace
-
-A centralized administrative interface for platform oversight.
-
-- Review and moderate task listings.
-- Explore platform analytics and sample performance metrics.
-- Access audit-related views.
-- Review reported concerns and dispute workflows.
-- Monitor trust and safety-related interfaces.
-
-### 🤖 4. AI-Assisted Matching Concept
-
-SkillSangam is designed around intelligent talent discovery.
-
-The proposed matching experience can consider:
-
-- Student skills and technical capabilities.
-- Startup requirements.
-- Project complexity and expected deliverables.
-- Learning goals and areas of interest.
-- Relevant experience and portfolio evidence.
-
-The current candidate recommendation and match-score interfaces use demonstration data. A production AI matching service is not yet connected.
-
-### 🏆 5. Trust, Safety and Transparency
-
-Trust is essential when students and startups collaborate remotely.
-
-The frontend includes interfaces and workflows for:
-
-- Reporting suspicious or misleading listings.
-- Flagging unclear compensation details.
-- Reporting unexpected project scope changes.
-- Raising project disputes.
-- Reviewing trust-related information.
-- Supporting human review instead of relying entirely on automated decisions.
-
----
-
-## 🔄 How SkillSangam Works
-
-The platform is designed around a structured micro-internship lifecycle.
+## Demo accounts
 
 ```text
-       STUDENT                         STARTUP
-          |                               |
-          |                         Create Opportunity
-          |                               |
-          |                               |
-     Create Profile                 Define Requirements
-          |                               |
-          |                               |
-          +---------- Discover -----------+
-                         |
-                         |
-                  Apply for Task
-                         |
-                         |
-                  Application Review
-                         |
-                         |
-                    Shortlisting
-                         |
-                         |
-                  Project Workroom
-                         |
-                         |
-                  Milestone Submission
-                         |
-                         |
-                   Review & Feedback
-                         |
-                         |
-                Portfolio Development
+Student
+Email: student@skillsangam.dev
+Password: student123
+
+Employer
+Email: team@greenloop.dev
+Password: employer123
+
+Admin
+Email: admin@skillsangam.dev
+Password: admin123
 ```
 
-The goal is to make every opportunity transparent, structured, and focused on demonstrable outcomes.
+The seeded employer accounts include approved employers and a pending employer for demonstrating the admin approval queue.
 
----
+## Architecture
 
-## 🧰 Technology Stack
-
-| Layer | Technology |
-|---|---|
-| Frontend Framework | React 18 |
-| Build Tool | Vite 6 |
-| Programming Language | JavaScript (ES Modules) |
-| UI Icons | Lucide React |
-| Styling | CSS |
-| Browser Persistence | LocalStorage |
-| Package Manager | npm |
-
-### Current Project Dependencies
-
-- `react`
-- `react-dom`
-- `vite`
-- `@vitejs/plugin-react`
-- `lucide-react`
-
----
-
-## ⚙️ Getting Started
-
-Follow these instructions to run the project locally.
-
-### Prerequisites
-
-Make sure you have installed:
-
-- Node.js 18 or later
-- npm
-- Git
-
-### 1. Clone the Repository
-
-```bash
-git clone https://github.com/GoldRay19/Skill-Sangam.git
+```text
+src/
+├── main.jsx                  # React bootstrap
+├── Root.jsx                  # React Router route definitions
+├── index.css                 # Tailwind directives and application styles
+├── api/                      # Async localStorage API modules and seed data
+├── context/                  # Authentication context
+├── layouts/                  # Public, Student, Employer, and Admin layouts
+├── components/               # Shared modal, toast, badge, tag, and state UI
+├── pages/
+│   ├── public/               # Landing, auth, browse, and static pages
+│   ├── student/              # Student dashboard and workflows
+│   ├── employer/             # Employer dashboard and workflows
+│   ├── admin/                # Admin dashboard and moderation workflows
+│   └── shared/               # Account and unauthorized pages
+└── utils/                    # Match scoring, validation, and GitHub integration
 ```
 
-### 2. Navigate to the Project
+The API modules return REST-shaped `{ data }` results and add a simulated 300ms delay. They currently use localStorage so they can later be replaced with Express requests without changing page components.
 
-```bash
-cd Skill-Sangam
-```
+## Technology
 
-### 3. Install Dependencies
+- React 18
+- Vite 6
+- React Router 6
+- JavaScript ES modules
+- Tailwind CSS with PostCSS
+- Lucide React icons
+- Browser localStorage persistence
+
+## Getting started
+
+Requirements: Node.js 18+ and npm.
 
 ```bash
 npm install
-```
-
-### 4. Start the Development Server
-
-```bash
 npm run dev
 ```
 
-Open the local URL displayed in your terminal by Vite.
-
-### 5. Create a Production Build
+Create a production build with:
 
 ```bash
 npm run build
 ```
 
-### 6. Preview the Production Build
+## Suggested demo flows
 
-```bash
-npm run preview
-```
+1. Student: log in, open Browse, inspect an internship, apply with a 20+ character note, then review My applications.
+2. Employer: open the dashboard, complete verification if needed, post an internship, then inspect applicants.
+3. Admin: open Employer approvals, approve the pending employer, then review Reports and Audit log.
 
----
+## Phase 1 limitations
 
-## 🧪 Current Implementation Status
-
-SkillSangam currently provides a frontend prototype with interactive product workflows and demonstration data.
-
-| Module | Current Status |
-|---|---|
-| Public landing page | Frontend implemented |
-| Student workspace | Frontend implemented |
-| Startup workspace | Frontend implemented |
-| Administrator workspace | Frontend implemented |
-| Opportunity discovery | Frontend implemented |
-| Application workflows | Frontend demonstration |
-| Skills Lab | Frontend demonstration |
-| Project workroom | Frontend demonstration |
-| Candidate recommendations | Sample data |
-| Trust and reporting interfaces | Frontend demonstration |
-| Local browser persistence | Implemented using LocalStorage |
-| Backend APIs | Not connected |
-| Database integration | Not connected |
-| Real authentication | Not connected |
-| AI-powered matching service | Not connected |
-| Real-time messaging | Not connected |
-| Payment processing | Not connected |
-
-**Important:** The current version is a frontend prototype. Sample companies, student profiles, applications, messages, analytics, and recommendations are demonstration data, not verified real-world records.
-
----
-
-## 🔮 Future Roadmap
-
-The following improvements can help evolve SkillSangam into a production-ready platform.
-
-### Backend and Infrastructure
-- Develop a Node.js and Express backend.
-- Integrate MongoDB for persistent data storage.
-- Implement secure authentication and role-based authorization.
-- Build REST APIs for students, startups, applications, and projects.
-
-### AI and Intelligent Features
-- Develop explainable AI-based student-opportunity matching.
-- Introduce skill-gap analysis and personalized learning recommendations.
-- Build portfolio-based candidate evaluation.
-- Add AI-assisted project requirement generation.
-- Introduce intelligent application screening with human oversight.
-
-### Collaboration and Productivity
-- Enable real-time messaging using Socket.IO.
-- Implement milestone submission and review APIs.
-- Introduce project activity notifications.
-- Support file attachments and proof-of-work verification.
-
-### Trust and Payments
-- Introduce startup and employer verification.
-- Implement secure payment and compensation workflows.
-- Build dispute resolution and moderation services.
-- Maintain auditable project and payment histories.
-
-These are proposed development directions, not claims about existing functionality.
-
----
-
-## 🔐 Privacy and Security
-
-SkillSangam is designed with transparency and responsible platform usage in mind.
-
-- Avoid collecting unnecessary personal information.
-- Obtain explicit consent before connecting external accounts.
-- Protect student and startup information through appropriate access controls.
-- Keep payment and verification workflows auditable.
-- Provide reporting and human-review mechanisms.
-- Never expose API keys, credentials, or private configuration files in public commits.
-
-The current prototype does not provide production-grade authentication or server-side security.
-
----
-
-## 🤝 Contributing
-
-Contributions are welcome!
-
-Whether you are a frontend developer, backend developer, AI/ML enthusiast, UI/UX designer, or student contributor, you can help improve SkillSangam.
-
-### Contribution Workflow
-
-1. Fork this repository.
-2. Create a feature branch.
-3. Implement your changes.
-4. Test the application locally.
-5. Commit your changes with a meaningful message.
-6. Push your branch.
-7. Open a Pull Request with a clear description of your contribution.
-
-Example:
-
-```bash
-git checkout -b feature/your-feature-name
-
-git add .
-
-git commit -m "Add: describe your feature"
-
-git push origin feature/your-feature-name
-```
-
-Please keep pull requests focused, explain the problem being solved, and include screenshots when UI changes are involved.
-
----
-
-## 🌍 Who Can Benefit?
-
-| Audience | Benefits |
-|---|---|
-| Students | Practical experience and portfolio development |
-| Startups | Access to emerging talent |
-| Developers | Opportunities to demonstrate technical skills |
-| Freshers | Exposure to real project workflows |
-| Educational Communities | Stronger industry collaboration |
-
----
-
-## 📈 Expected Impact
-
-SkillSangam aims to create a more accessible and transparent skill-development ecosystem.
-
-- Reduce the gap between theoretical learning and practical experience.
-- Help students build portfolios through real project work.
-- Enable startups to discover emerging talent.
-- Encourage outcome-based learning.
-- Promote transparent compensation and deliverables.
-- Create opportunities for continuous professional growth.
-
----
-
-## 📄 License
-
-A license should be selected and added to the repository before distributing the project under specific open-source terms.
-
----
-
-## ⭐ Support the Project
-
-If you find SkillSangam interesting, consider giving the repository a star!
-
-Your support helps increase visibility and encourages further development.
-
-**Repository:**  
-https://github.com/GoldRay19/Skill-Sangam
-
----
-
-<p align="center">
-  <strong>SkillSangam — Where Skills Meet Opportunities.</strong>
-  <br />
-  <em>Learn. Build. Collaborate. Grow.</em>
-</p>
+- Authentication, verification, uploaded proof documents, and data storage are local demo implementations.
+- Employer OTP is printed to the browser console and shown in a dismissible development banner.
+- GitHub skill detection calls the public GitHub repositories API only after explicit consent.
+- No production backend, database, payment processing, real-time messaging, or production security controls are connected.
+- Match scores and dashboards are computed from the seeded/localStorage data.
