@@ -61,24 +61,6 @@ All three roles have separate layouts, navigation links, role badges, dashboards
 | `/admin/reports` | Report status tabs and moderation actions |
 | `/admin/audit` | Recorded administrative actions |
 
-## Demo accounts
-
-```text
-Student
-Email: student@skillsangam.dev
-Password: student123
-
-Employer
-Email: team@greenloop.dev
-Password: employer123
-
-Admin
-Email: admin@skillsangam.dev
-Password: admin123
-```
-
-The seeded employer accounts include approved employers and a pending employer for demonstrating the admin approval queue.
-
 ## Architecture
 
 ```text
@@ -99,7 +81,7 @@ src/
 └── utils/                    # Match scoring, validation, and GitHub integration
 ```
 
-The API modules return REST-shaped `{ data }` results and add a simulated 300ms delay. They currently use localStorage so they can later be replaced with Express requests without changing page components.
+The frontend and server are separate applications. The frontend in `frontend/` calls the Express API in `server/` over HTTP and neither application imports modules from the other. The backend uses MongoDB when `MONGO_URI` is configured, otherwise MongoDB Memory Server. Verification uploads use Cloudinary when `CLOUDINARY_URL` is configured, otherwise local disk.
 
 ## Technology
 
@@ -109,7 +91,9 @@ The API modules return REST-shaped `{ data }` results and add a simulated 300ms 
 - JavaScript ES modules
 - Tailwind CSS with PostCSS
 - Lucide React icons
-- Browser localStorage persistence
+- Express and MongoDB/MongoDB Memory Server
+- JWT authentication and bcrypt password hashing
+- Cloudinary or local-disk document storage
 
 ## Getting started
 
@@ -117,12 +101,22 @@ Requirements: Node.js 18+ and npm.
 
 ```bash
 npm install
+cd server
+npm install
+npm run dev
+
+# In another terminal
+cd frontend
+npm install
 npm run dev
 ```
+
+Copy `server/.env.example` to `server/.env` and set `JWT_SECRET`. Set `ADMIN_EMAIL` and `ADMIN_PASSWORD` there when you need to create an admin account; no demo credentials are hardcoded.
 
 Create a production build with:
 
 ```bash
+cd frontend
 npm run build
 ```
 
