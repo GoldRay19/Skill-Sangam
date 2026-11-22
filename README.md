@@ -1,4 +1,4 @@
-# SkillSangam
+# Skill Sangam
 
 SkillSangam is a React/Vite marketplace prototype connecting fresh software graduates with startups through paid, focused two-week micro-internships.
 
@@ -58,30 +58,35 @@ All three roles have separate layouts, navigation links, role badges, dashboards
 | --- | --- |
 | `/admin` | Admin dashboard with computed counts |
 | `/admin/employers` | Employer approval, suspension, and reinstatement |
+| `/admin/verifications` | Employer verification review with proof documents |
 | `/admin/reports` | Report status tabs and moderation actions |
 | `/admin/audit` | Recorded administrative actions |
 
 ## Architecture
 
 ```text
-src/
-├── main.jsx                  # React bootstrap
-├── Root.jsx                  # React Router route definitions
-├── index.css                 # Tailwind directives and application styles
-├── api/                      # Async localStorage API modules and seed data
-├── context/                  # Authentication context
-├── layouts/                  # Public, Student, Employer, and Admin layouts
-├── components/               # Shared modal, toast, badge, tag, and state UI
-├── pages/
-│   ├── public/               # Landing, auth, browse, and static pages
-│   ├── student/              # Student dashboard and workflows
-│   ├── employer/             # Employer dashboard and workflows
-│   ├── admin/                # Admin dashboard and moderation workflows
-│   └── shared/               # Account and unauthorized pages
-└── utils/                    # Match scoring, validation, and GitHub integration
+frontend/
+├── src/                      # React application source
+│   ├── api/                  # HTTP clients for the Express API
+│   ├── components/           # Shared UI components
+│   ├── context/              # Authentication context
+│   ├── layouts/              # Role-specific layouts
+│   ├── pages/                # Public, student, employer, and admin pages
+│   └── utils/                # Validation, matching, and GitHub integration
+└── package.json              # Frontend dependencies and Vite scripts
+
+server/
+├── config/                   # Database connection and memory fallback
+├── middleware/               # Authentication and role authorization
+├── models/                   # Mongoose models
+├── services/                 # Cloudinary or local upload storage
+├── index.js                  # Express API and route definitions
+└── package.json              # Backend dependencies and scripts
 ```
 
-The frontend and server are separate applications. The frontend in `frontend/` calls the Express API in `server/` over HTTP and neither application imports modules from the other. The backend uses MongoDB when `MONGO_URI` is configured, otherwise MongoDB Memory Server. Verification uploads use Cloudinary when `CLOUDINARY_URL` is configured, otherwise local disk.
+The frontend and server are separate applications. The frontend in `frontend/` calls the Express API in `server/` over HTTP, and neither application imports modules from the other.
+
+The backend uses MongoDB when `MONGO_URI` is configured, otherwise MongoDB Memory Server. Verification uploads use Cloudinary when `CLOUDINARY_URL` is configured, otherwise local disk under `uploads/`. Runtime uploads and local environment files are ignored by Git.
 
 ## Technology
 
@@ -100,7 +105,6 @@ The frontend and server are separate applications. The frontend in `frontend/` c
 Requirements: Node.js 18+ and npm.
 
 ```bash
-npm install
 cd server
 npm install
 npm run dev
@@ -111,7 +115,15 @@ npm install
 npm run dev
 ```
 
-Copy `server/.env.example` to `server/.env` and set `JWT_SECRET`. Set `ADMIN_EMAIL` and `ADMIN_PASSWORD` there when you need to create an admin account; no demo credentials are hardcoded.
+Copy `server/.env.example` to `server/.env` and configure:
+
+- `JWT_SECRET` for session signing.
+- `MONGO_URI` for hosted MongoDB; leave blank to use MongoDB Memory Server.
+- `CLOUDINARY_URL` for hosted proof-document storage; leave blank to use local disk.
+- `CLIENT_ORIGIN` for the frontend URL.
+- `ADMIN_EMAIL`, `ADMIN_PASSWORD`, and optionally `ADMIN_NAME` to bootstrap an admin account.
+
+No demo credentials are hardcoded in the application.
 
 Create a production build with:
 
@@ -126,10 +138,9 @@ npm run build
 2. Employer: open the dashboard, complete verification if needed, post an internship, then inspect applicants.
 3. Admin: open Employer approvals, approve the pending employer, then review Reports and Audit log.
 
-## Phase 1 limitations
+## Development notes
 
-- Authentication, verification, uploaded proof documents, and data storage are local demo implementations.
-- Employer OTP is printed to the browser console and shown in a dismissible development banner.
+- Employer OTP is currently a development-only browser flow. It is shown in the development banner and is not sent by email.
 - GitHub skill detection calls the public GitHub repositories API only after explicit consent.
-- No production backend, database, payment processing, real-time messaging, or production security controls are connected.
-- Match scores and dashboards are computed from the seeded/localStorage data.
+- Production deployments should use a hosted MongoDB database, Cloudinary, a strong JWT secret, HTTPS, and an email provider for OTP delivery.
+- Payment processing and real-time messaging are not connected.
