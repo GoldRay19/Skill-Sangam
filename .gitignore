@@ -39,6 +39,7 @@ coverage/
 
 # Local development files
 *.local
+uploads/
 
 # Temporary files
 tmp/

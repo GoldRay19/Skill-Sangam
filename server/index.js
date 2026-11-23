@@ -1,0 +1,195 @@
+import "dotenv/config";
+import path from "node:path";
+import { fileURLToPath } from "node:url";
+import bcrypt from "bcryptjs";
+import cors from "cors";
+import express from "express";
+import multer from "multer";
+import { connectDatabase } from "./config/database.js";
+import Application from "./models/Application.js";
+import Audit from "./models/Audit.js";
+import Internship from "./models/Internship.js";
+import Report from "./models/Report.js";
+import User from "./models/User.js";
+import { publicUser, requireAuth, requireRole, signUser } from "./middleware/auth.js";
+import { saveProof } from "./services/uploads.js";
+import { id, withId } from "./utils/serialize.js";
+
+const app = express();
+const upload = multer({ storage: multer.memoryStorage(), limits: { fileSize: 2 * 1024 * 1024 } });
+const serverRoot = path.dirname(fileURLToPath(import.meta.url));
+
+app.use(cors({ origin: process.env.CLIENT_ORIGIN?.split(",") || true }));
+app.use(express.json({ limit: "6mb" }));
+app.use("/uploads", express.static(path.resolve(serverRoot, "../uploads")));
+
+const asyncRoute = (handler) => (req, res, next) => Promise.resolve(handler(req, res, next)).catch(next);
+const data = (res, value, status = 200) => res.status(status).json({ data: value });
+
+async function bootstrapAdmin() {
+  if (!process.env.ADMIN_EMAIL || !process.env.ADMIN_PASSWORD) return;
+  const email = process.env.ADMIN_EMAIL.toLowerCase();
+  if (await User.exists({ email })) return;
+  await User.create({
+    role: "admin",
+    name: process.env.ADMIN_NAME || "Administrator",
+    email,
+    passwordHash: await bcrypt.hash(process.env.ADMIN_PASSWORD, 12),
+  });
+}
+
+app.get("/api/health", (req, res) => res.json({ ok: true }));
+
+app.post("/api/auth/register", asyncRoute(async (req, res) => {
+  const { role, name, email, password } = req.body;
+  if (!["student", "employer"].includes(role)) return res.status(400).json({ message: "Choose a valid account type." });
+  if (!name || !email || !password || password.length < 6) return res.status(400).json({ message: "Name, email, and a six-character password are required." });
+  const normalizedEmail = email.toLowerCase().trim();
+  if (await User.exists({ email: normalizedEmail })) return res.status(409).json({ message: "An account with this email already exists." });
+  const user = await User.create({
+    role,
+    name: name.trim(),
+    email: normalizedEmail,
+    passwordHash: await bcrypt.hash(password, 12),
+    ...(role === "student"
+      ? { college: "", bio: "", skills: [], github: "" }
+      : { verificationStatus: "unverified", companyName: "", website: "", linkedin: "", registrationType: "CIN", registrationNumber: "", proof: "" }),
+  });
+  data(res, { user: publicUser(user), token: signUser(user) }, 201);
+}));
+
+app.post("/api/auth/login", asyncRoute(async (req, res) => {
+  const { email, password, expectedRole } = req.body;
+  const user = await User.findOne({ email: email?.toLowerCase().trim() });
+  if (!user || !(await bcrypt.compare(password || "", user.passwordHash))) return res.status(401).json({ message: "Invalid email or password." });
+  if (expectedRole && user.role !== expectedRole) return res.status(403).json({ message: `This account is for the ${user.role} profile.` });
+  data(res, { user: publicUser(user), token: signUser(user) });
+}));
+
+app.get("/api/auth/session", requireAuth, asyncRoute(async (req, res) => data(res, publicUser(req.user))));
+app.post("/api/auth/logout", (req, res) => data(res, true));
+
+app.get("/api/users", requireAuth, requireRole("admin"), asyncRoute(async (req, res) => data(res, (await User.find()).map(publicUser))));
+app.patch("/api/users/:id", requireAuth, asyncRoute(async (req, res) => {
+  if (req.user.role !== "admin" && id(req.user) !== req.params.id) return res.status(403).json({ message: "You cannot edit this account." });
+  const updates = { ...req.body };
+  delete updates.password;
+  delete updates.passwordHash;
+  const user = await User.findByIdAndUpdate(req.params.id, updates, { new: true, runValidators: true });
+  if (!user) return res.status(404).json({ message: "User not found." });
+  data(res, publicUser(user));
+}));
+
+app.post("/api/employers/:id/verification", requireAuth, requireRole("employer"), asyncRoute(async (req, res) => {
+  if (id(req.user) !== req.params.id) return res.status(403).json({ message: "You cannot update this employer." });
+  const { proof, proofName, proofType, ...details } = req.body;
+  let storedProof = {};
+  if (proof?.startsWith("data:")) {
+    const [, encoded] = proof.split(",");
+    storedProof = await saveProof({ data: Buffer.from(encoded, "base64"), filename: proofName || "proof-document", mimetype: proofType || "application/octet-stream" });
+  }
+  const user = await User.findByIdAndUpdate(req.params.id, { ...details, ...storedProof, verificationStatus: "pending", rejectionReason: "" }, { new: true, runValidators: true });
+  data(res, publicUser(user));
+}));
+
+app.patch("/api/employers/:id/status", requireAuth, requireRole("admin"), asyncRoute(async (req, res) => {
+  const { status, rejectionReason = "" } = req.body;
+  const user = await User.findByIdAndUpdate(req.params.id, { verificationStatus: status, rejectionReason }, { new: true });
+  if (!user) return res.status(404).json({ message: "Employer not found." });
+  await Audit.create({ action: status === "approved" ? "Approved employer" : "Rejected employer", target: id(user), actor: id(req.user), reason: rejectionReason });
+  data(res, publicUser(user));
+}));
+
+app.patch("/api/employers/:id/suspension", requireAuth, requireRole("admin"), asyncRoute(async (req, res) => {
+  const { status = "suspended" } = req.body;
+  const user = await User.findByIdAndUpdate(req.params.id, { verificationStatus: status }, { new: true });
+  if (status === "suspended") await Internship.updateMany({ employerId: req.params.id }, { status: "closed" });
+  await Audit.create({ action: status === "suspended" ? "Suspended employer" : "Reinstated employer", target: id(user), actor: id(req.user) });
+  data(res, publicUser(user));
+}));
+
+app.get("/api/internships", asyncRoute(async (req, res) => {
+  const { q = "", skill = "", sort = "match", studentSkills = "" } = req.query;
+  const skills = studentSkills ? String(studentSkills).split(",") : [];
+  const users = await User.find({ role: "employer" }).lean();
+  let internships = await Internship.find({ status: "open" }).lean();
+  let result = internships.map((item) => {
+    const employer = users.find((user) => id(user) === id(item.employerId));
+    const match = skills.length ? Math.round((item.requiredSkills.filter((value) => skills.some((skillValue) => skillValue.toLowerCase() === value.toLowerCase())).length / item.requiredSkills.length) * 100) : null;
+    return { ...withId(item), employerId: id(item.employerId), company: employer?.companyName || "Startup", match };
+  });
+  const term = q.toLowerCase();
+  if (term) result = result.filter((item) => `${item.title} ${item.description} ${item.company} ${item.requiredSkills.join(" ")}`.toLowerCase().includes(term));
+  if (skill) result = result.filter((item) => item.requiredSkills.includes(skill));
+  result.sort((a, b) => sort === "stipend" ? b.stipend - a.stipend : (b.match ?? 0) - (a.match ?? 0));
+  data(res, result);
+}));
+
+app.get("/api/internships/:id", asyncRoute(async (req, res) => {
+  const item = await Internship.findById(req.params.id).lean();
+  if (!item) return res.status(404).json({ message: "Internship not found." });
+  const employer = await User.findById(item.employerId).lean();
+  data(res, { ...withId(item), employerId: id(item.employerId), company: employer?.companyName || "Startup", employer: employer ? publicUser(employer) : null });
+}));
+
+app.get(
+  "/api/employers/:id/internships",
+  requireAuth,
+  asyncRoute(async (req, res) => {
+    const internships = await Internship.find({ employerId: req.params.id }).lean();
+    data(res, internships.map((item) => ({ ...withId(item), employerId: id(item.employerId) })));
+  }),
+);
+app.post("/api/internships", requireAuth, requireRole("employer"), asyncRoute(async (req, res) => {
+  if (req.user.verificationStatus !== "approved") return res.status(403).json({ message: "Only approved employers can post internships." });
+  const item = await Internship.create({ ...req.body, employerId: req.user._id, status: "open" });
+  data(res, { ...withId(item), employerId: id(item.employerId) }, 201);
+}));
+app.patch("/api/internships/:id", requireAuth, requireRole("employer"), asyncRoute(async (req, res) => {
+  const item = await Internship.findOneAndUpdate({ _id: req.params.id, employerId: req.user._id }, req.body, { new: true });
+  if (!item) return res.status(404).json({ message: "Internship not found." });
+  data(res, { ...withId(item), employerId: id(item.employerId) });
+}));
+
+app.get("/api/applications", requireAuth, asyncRoute(async (req, res) => {
+  const filter = {};
+  if (req.query.studentId) filter.studentId = req.query.studentId;
+  if (req.query.internshipId) filter.internshipId = req.query.internshipId;
+  let applications = await Application.find(filter).populate("studentId").populate("internshipId").lean();
+  if (req.query.employerId) applications = applications.filter((item) => id(item.internshipId?.employerId) === req.query.employerId);
+  data(res, applications.map((item) => ({ ...withId(item), studentId: id(item.studentId), internshipId: id(item.internshipId), student: item.studentId ? publicUser(item.studentId) : null, internship: item.internshipId ? withId(item.internshipId) : null })));
+}));
+app.post("/api/applications", requireAuth, requireRole("student"), asyncRoute(async (req, res) => {
+  if (await Application.exists({ studentId: req.user._id, internshipId: req.body.internshipId })) return res.status(409).json({ message: "You have already applied." });
+  const application = await Application.create({ ...req.body, studentId: req.user._id, status: "Applied" });
+  data(res, { ...withId(application), studentId: id(application.studentId), internshipId: id(application.internshipId) }, 201);
+}));
+app.patch("/api/applications/:id", requireAuth, requireRole("employer"), asyncRoute(async (req, res) => {
+  const application = await Application.findByIdAndUpdate(req.params.id, { status: req.body.status }, { new: true });
+  data(res, { ...withId(application), studentId: id(application.studentId), internshipId: id(application.internshipId) });
+}));
+
+app.get("/api/reports", requireAuth, requireRole("admin"), asyncRoute(async (req, res) => data(res, (await Report.find().sort({ createdAt: -1 }).lean()).map(withId))));
+app.post("/api/reports", requireAuth, requireRole("student"), asyncRoute(async (req, res) => data(res, withId(await Report.create({ ...req.body, studentId: req.user._id, status: "Open" })), 201)));
+app.patch(
+  "/api/reports/:id",
+  requireAuth,
+  requireRole("admin"),
+  asyncRoute(async (req, res) => {
+    const report = await Report.findByIdAndUpdate(req.params.id, { status: req.body.status }, { new: true });
+    data(res, withId(report));
+  }),
+);
+app.get("/api/audit", requireAuth, requireRole("admin"), asyncRoute(async (req, res) => data(res, (await Audit.find().sort({ createdAt: -1 }).lean()).map(withId))));
+
+app.use((error, req, res, next) => {
+  console.error(error);
+  res.status(error.status || 500).json({ message: error.message || "Server error." });
+});
+
+const port = Number(process.env.PORT || 4000);
+const { memoryServer } = await connectDatabase();
+await bootstrapAdmin();
+app.listen(port, () => console.log(`SkillSangam API listening on http://localhost:${port}`));
+process.on("SIGINT", async () => process.exit(0));
+process.on("SIGTERM", async () => process.exit(0));
